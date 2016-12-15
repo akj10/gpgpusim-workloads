@@ -1,12 +1,13 @@
 #include <stdio.h>
 
-#define N 16
-#define threadPerBlock 16
-#define blockPerGrid min(N , (N+threadPerBlock-1) / threadPerBlock )
+#define N 32*2000
+#define threadPerBlock 32
+#define blockPerGrid min(2000 , (N+threadPerBlock-1) / threadPerBlock )
+#define testBlocks blockPerGrid
 
-float cpudot(int n, float *x, float *y)
+double cpudot(int n, float *x, float *y)
 {
-  float z = 0.0f;
+  double z = 0.0f;
   for (int i=0; i<n; i++) z += x[i] * y[i];
   return z;
 }
@@ -16,7 +17,9 @@ void dot(int n, float *x, float *y, float *z)
 {
   __shared__ float cache[threadPerBlock];
   unsigned int tid = blockIdx.x*blockDim.x + threadIdx.x;
-  if (tid < n) cache[threadIdx.x] = x[tid] * y[tid];
+  if (tid < n) {
+    cache[threadIdx.x] = x[tid] * y[tid];
+  }
   __syncthreads();
   //printf("Thread %d: x=%f, y=%f, cache=%f\n", tid, x[tid], y[tid], cache[threadIdx.x]);
 
@@ -33,7 +36,8 @@ void dot(int n, float *x, float *y, float *z)
 int main(void)
 {
   float *x, *y, *z, *d_x, *d_y, *d_z;
-  float cpu_result, gpu_result;
+  double cpu_result, gpu_result=0.0;
+  double cpu_acc=0.0;
   x = (float*)malloc(N*sizeof(float));
   y = (float*)malloc(N*sizeof(float));
   z = (float*)malloc(blockPerGrid*sizeof(float));
@@ -59,9 +63,19 @@ int main(void)
   cudaDeviceSynchronize();
   cudaMemcpy(z, d_z, blockPerGrid*sizeof(float), cudaMemcpyDeviceToHost);
   cudaDeviceSynchronize();
-  for (int i=0; i<blockPerGrid; i++) printf("%f\n", z[i]);//gpu_result += z[i];
+  for (int i=0; i<testBlocks; i++) {
+    //printf("%f\n", z[i]);
+    gpu_result += (double)z[i];
+    cpu_result = cpudot(threadPerBlock, x+i*threadPerBlock, y+i*threadPerBlock);
+    cpu_acc += cpu_result;
+    if (abs(z[i] - cpu_result) > 0.000001) 
+      printf("Block %d: Partial Dot Product not matching GPU:%f CPU:%f\n", i, z[i], cpu_result);
+    else
+      printf("Block %d: Partial Dot Product matches GPU:%f CPU:%f\n", i, z[i], cpu_result);
+  }
+  printf("cpu accumulated val=%f\n", cpu_acc);
 
-  cpu_result = cpudot(N, x, y);
-    if (gpu_result - cpu_result > 1e-6) printf("GPU Dot product:%f not matching with CPU:%f\n", *z, cpu_result);
-    else printf("GPU Dot product matches with CPU: %f\n");
+  cpu_result = cpudot(testBlocks*threadPerBlock, x, y);
+    if (abs(gpu_result - cpu_result) > 0.000001) printf("GPU Dot product:%f not matching with CPU:%f\n", gpu_result, cpu_result);
+    else printf("GPU Dot product:%f matches with CPU:%f\n", gpu_result, cpu_result);
 }
