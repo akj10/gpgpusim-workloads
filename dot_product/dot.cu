@@ -1,14 +1,13 @@
 #include <stdio.h>
 
-#define N 32*2000
-#define threadPerBlock 32
-#define blockPerGrid min(2000 , (N+threadPerBlock-1) / threadPerBlock )
-#define testBlocks blockPerGrid
+#define N (1<<16)
+#define threadPerBlock (1<<8)
+#define blockPerGrid min(1<<4 , (N+threadPerBlock-1) / threadPerBlock )
 
 double cpudot(int n, float *x, float *y)
 {
   double z = 0.0f;
-  for (int i=0; i<n; i++) z += x[i] * y[i];
+  for (int i=0; i<n; i++) z += (double)x[i] * (double)y[i];
   return z;
 }
 
@@ -17,8 +16,10 @@ void dot(int n, float *x, float *y, float *z)
 {
   __shared__ float cache[threadPerBlock];
   unsigned int tid = blockIdx.x*blockDim.x + threadIdx.x;
-  if (tid < n) {
-    cache[threadIdx.x] = x[tid] * y[tid];
+  cache[threadIdx.x] = 0.0;
+  while (tid < n) {
+    cache[threadIdx.x] += x[tid] * y[tid];
+    tid += threadPerBlock * blockPerGrid;
   }
   __syncthreads();
   //printf("Thread %d: x=%f, y=%f, cache=%f\n", tid, x[tid], y[tid], cache[threadIdx.x]);
@@ -63,19 +64,11 @@ int main(void)
   cudaDeviceSynchronize();
   cudaMemcpy(z, d_z, blockPerGrid*sizeof(float), cudaMemcpyDeviceToHost);
   cudaDeviceSynchronize();
-  for (int i=0; i<testBlocks; i++) {
-    //printf("%f\n", z[i]);
+  for (int i=0; i<blockPerGrid; i++) {
     gpu_result += (double)z[i];
-    cpu_result = cpudot(threadPerBlock, x+i*threadPerBlock, y+i*threadPerBlock);
-    cpu_acc += cpu_result;
-    if (abs(z[i] - cpu_result) > 0.000001) 
-      printf("Block %d: Partial Dot Product not matching GPU:%f CPU:%f\n", i, z[i], cpu_result);
-    else
-      printf("Block %d: Partial Dot Product matches GPU:%f CPU:%f\n", i, z[i], cpu_result);
   }
-  printf("cpu accumulated val=%f\n", cpu_acc);
 
-  cpu_result = cpudot(testBlocks*threadPerBlock, x, y);
+  cpu_result = cpudot(N, x, y);
     if (abs(gpu_result - cpu_result) > 0.000001) printf("GPU Dot product:%f not matching with CPU:%f\n", gpu_result, cpu_result);
     else printf("GPU Dot product:%f matches with CPU:%f\n", gpu_result, cpu_result);
 }
