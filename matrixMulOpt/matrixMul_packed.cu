@@ -68,11 +68,11 @@ __global__ void matrixMulGPU(unsigned int *A, unsigned int *B, int *C, int width
 
         	// Declaration of the shared memory array As used to
         	// store the sub-matrix of A
-        	__shared__ int As[BLOCK_SIZE][BLOCK_SIZE/4];
+        	__shared__ unsigned int As[BLOCK_SIZE][BLOCK_SIZE/4];
 
         	// Declaration of the shared memory array Bs used to
         	// store the sub-matrix of B
-        	__shared__ int Bs[BLOCK_SIZE][BLOCK_SIZE/4];
+        	__shared__ unsigned int Bs[BLOCK_SIZE][BLOCK_SIZE/4];
 
         	// Load the matrices from device memory
         	// to shared memory; each thread loads
@@ -105,18 +105,18 @@ __global__ void matrixMulGPU(unsigned int *A, unsigned int *B, int *C, int width
     	// each thread writes one element
     	int c = width * BLOCK_SIZE * by + BLOCK_SIZE * bx;
     	C[c + width * ty + tx] = Csub;
-
-	
-
+        //printf("Partial product = %u \n",Csub);
 }
 
 int main(int argc, char *argv[]){
   	int i;
-  	int *A, *B, *C, *D;
-  	int *A_dev, *B_dev, *C_dev;
+  	int8_t *A, *B;
+        int *C, *D;
+  	unsigned int *A_dev, *B_dev;
+        int *C_dev;
   	double start_timer, end_timer;
 
-	int width, MSIZE;
+	int width, MSIZE, MSIZE_p;
 
 	if(argc < 2){
 		printf("Error input options\n");
@@ -125,11 +125,12 @@ int main(int argc, char *argv[]){
 
 	width = atoi(argv[1]);
 	MSIZE = width * width;
+        MSIZE_p = MSIZE/4;
 
-    	A = (int*)malloc(sizeof(int)*MSIZE);
-     	cudaMalloc(&A_dev, MSIZE*sizeof(int));
-    	B = (int*)malloc(sizeof(int)*MSIZE);
-    	cudaMalloc(&B_dev, MSIZE*sizeof(int));
+    	A = (int8_t*)malloc(sizeof(int8_t)*MSIZE);
+     	cudaMalloc(&A_dev, MSIZE_p*sizeof(int));
+    	B = (int8_t*)malloc(sizeof(int8_t)*MSIZE);
+    	cudaMalloc(&B_dev, MSIZE_p*sizeof(int));
     	C = (int*)malloc(sizeof(int)*MSIZE);
     	cudaMalloc(&C_dev, MSIZE*sizeof(int));
     	D = (int*)malloc(sizeof(int)*MSIZE);
@@ -137,15 +138,15 @@ int main(int argc, char *argv[]){
 	srand(time(NULL));
   	// Init matrix
     	for(i = 0; i < MSIZE; i++){
-      		A[i] = (rand() % 16) - 8;
-      		B[i] = (rand() % 16) - 8;
+      		A[i] = 1;//(rand() % 16) - 8;
+      		B[i] = 1;//(rand() % 16) - 8;
       		C[i] = 0;
       		D[i] = 0;
     	}
 
-    	cudaMemcpy(A_dev, A, MSIZE*sizeof(int), cudaMemcpyHostToDevice);
-    	cudaMemcpy(B_dev, B, MSIZE*sizeof(int), cudaMemcpyHostToDevice);
-	cudaMemcpy(C_dev, C, MSIZE*sizeof(int), cudaMemcpyHostToDevice);
+    	cudaMemcpy(A_dev, (unsigned int*) A, MSIZE_p*sizeof(unsigned int), cudaMemcpyHostToDevice);
+    	cudaMemcpy(B_dev, (unsigned int*) B, MSIZE_p*sizeof(unsigned int), cudaMemcpyHostToDevice);
+	cudaMemcpy(C_dev, C, MSIZE*sizeof(unsigned int), cudaMemcpyHostToDevice);
   	cudaDeviceSynchronize();
 
    	/*thread blcok conf.*/ 
@@ -175,11 +176,11 @@ int main(int argc, char *argv[]){
   	printf("Verifying\n");
 	int flag = 0;
     	for(i = 0; i < MSIZE; i++){
-      		if(abs(C[i] - D[i]) > 1e-3){
-        		printf("Error:%d, %d, %d\n", C[i], D[i], i);
-			break;
-      		}
-		flag ++;
+          if(abs(C[i] - D[i]) > 1e-3){
+            printf("Error:%d, %d, %d\n", C[i], D[i], i);
+            //break;
+          }
+          flag ++;
 	}
         if(flag == MSIZE) printf("Verify Success!!\n");
 

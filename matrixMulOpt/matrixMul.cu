@@ -112,7 +112,10 @@ __global__ void matrixMulGPU(int *A, int *B, int *C, int width){
     	int c = width * BLOCK_SIZE * by + BLOCK_SIZE * bx;
     	C[c + width * ty + tx] = Csub;
 
-	
+        printf(" by = %u",by);
+        printf(" bx = %u",bx);
+        printf(" ty = %u",ty);
+        printf(" tx = %u\n",tx);
 
 }
 
