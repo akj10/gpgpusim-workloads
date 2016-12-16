@@ -16,9 +16,9 @@ return _ret_val_0;
 
 #define BLOCK_SIZE 16
 
-void matrixMulCPU(float *A, float *B, float *C, int size){
+void matrixMulCPU(int *A, int *B, int *C, int size){
 	int i, j, k;
-	float sum;
+	int sum;
 	for(i = 0; i < size; i++){
 		for(j = 0; j < size; j++){
 			sum = 0;
@@ -31,7 +31,7 @@ void matrixMulCPU(float *A, float *B, float *C, int size){
 	}
 }
 
-__global__ void matrixMulGPU(float *A, float *B, float *C, int width){
+__global__ void matrixMulGPU(int *A, int *B, int *C, int width){
         // Block index
         int bx = blockIdx.x;
     	int by = blockIdx.y;
@@ -57,7 +57,7 @@ __global__ void matrixMulGPU(float *A, float *B, float *C, int width){
 
     	// Csub is used to store the element of the block sub-matrix
     	// that is computed by the thread
-    	float Csub = 0;
+    	int Csub = 0;
         if (bx == 0 && tx==0 && by==0 && ty==0) {
             printf("aBegin=%d, bBegin=%d\n", aBegin, bBegin);
             printf("aStep=%d, bStep=%d\n", aStep, bStep);
@@ -73,11 +73,11 @@ __global__ void matrixMulGPU(float *A, float *B, float *C, int width){
 
         	// Declaration of the shared memory array As used to
         	// store the sub-matrix of A
-        	__shared__ float As[BLOCK_SIZE][BLOCK_SIZE];
+        	__shared__ int As[BLOCK_SIZE][BLOCK_SIZE];
 
         	// Declaration of the shared memory array Bs used to
         	// store the sub-matrix of B
-        	__shared__ float Bs[BLOCK_SIZE][BLOCK_SIZE];
+        	__shared__ int Bs[BLOCK_SIZE][BLOCK_SIZE];
 
         	// Load the matrices from device memory
         	// to shared memory; each thread loads
@@ -85,7 +85,7 @@ __global__ void matrixMulGPU(float *A, float *B, float *C, int width){
         	As[ty][tx] = A[a + width * ty + tx];
         	Bs[ty][tx] = B[b + width * ty + tx];
             if (bx == 0 && tx==0 && by==0 && ty==0) {
-                printf("Loading A=%f, B=%f\n", As[ty][tx], Bs[ty][tx]);
+                printf("Loading A=%d, B=%d\n", As[ty][tx], Bs[ty][tx]);
             }
 
         	// Synchronize to make sure the matrices are loaded
@@ -118,8 +118,8 @@ __global__ void matrixMulGPU(float *A, float *B, float *C, int width){
 
 int main(int argc, char *argv[]){
   	int i;
-  	float *A, *B, *C, *D;
-  	float *A_dev, *B_dev, *C_dev;
+  	int *A, *B, *C, *D;
+  	int *A_dev, *B_dev, *C_dev;
   	double start_timer, end_timer;
 
 	int width, MSIZE;
@@ -132,26 +132,26 @@ int main(int argc, char *argv[]){
 	width = atoi(argv[1]);
 	MSIZE = width * width;
 
-    	A = (float*)malloc(sizeof(float)*MSIZE);
-     	cudaMalloc(&A_dev, MSIZE*sizeof(float));
-    	B = (float*)malloc(sizeof(float)*MSIZE);
-    	cudaMalloc(&B_dev, MSIZE*sizeof(float));
-    	C = (float*)malloc(sizeof(float)*MSIZE);
-    	cudaMalloc(&C_dev, MSIZE*sizeof(float));
-    	D = (float*)malloc(sizeof(float)*MSIZE);
+    	A = (int*)malloc(sizeof(int)*MSIZE);
+     	cudaMalloc(&A_dev, MSIZE*sizeof(int));
+    	B = (int*)malloc(sizeof(int)*MSIZE);
+    	cudaMalloc(&B_dev, MSIZE*sizeof(int));
+    	C = (int*)malloc(sizeof(int)*MSIZE);
+    	cudaMalloc(&C_dev, MSIZE*sizeof(int));
+    	D = (int*)malloc(sizeof(int)*MSIZE);
   
 	srand(time(NULL));
   	// Init matrix
     	for(i = 0; i < MSIZE; i++){
-      		A[i] = ((double) rand() / (RAND_MAX)) + 1;
-      		B[i] = ((double) rand() / (RAND_MAX)) + 1;
+      		A[i] = (rand() % 16) - 8;
+      		B[i] = (rand() % 16) - 8;
       		C[i] = 0;
       		D[i] = 0;
     	}
 
-    	cudaMemcpy(A_dev, A, MSIZE*sizeof(float), cudaMemcpyHostToDevice);
-    	cudaMemcpy(B_dev, B, MSIZE*sizeof(float), cudaMemcpyHostToDevice);
-	cudaMemcpy(C_dev, C, MSIZE*sizeof(float), cudaMemcpyHostToDevice);
+    	cudaMemcpy(A_dev, A, MSIZE*sizeof(int), cudaMemcpyHostToDevice);
+    	cudaMemcpy(B_dev, B, MSIZE*sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(C_dev, C, MSIZE*sizeof(int), cudaMemcpyHostToDevice);
   	cudaDeviceSynchronize();
 
    	/*thread blcok conf.*/ 
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]){
   	end_timer = my_timer();
   	printf("The GPU Elapsed Time:%lf Sec.\n", end_timer - start_timer);
 
-    	cudaMemcpy(C, C_dev, MSIZE*sizeof(float), cudaMemcpyDeviceToHost);
+    	cudaMemcpy(C, C_dev, MSIZE*sizeof(int), cudaMemcpyDeviceToHost);
   	cudaDeviceSynchronize();
  
 	start_timer = my_timer();
@@ -182,7 +182,7 @@ int main(int argc, char *argv[]){
 	int flag = 0;
     	for(i = 0; i < MSIZE; i++){
       		if(abs(C[i] - D[i]) > 1e-3){
-        		printf("Error:%f, %f, %d\n", C[i], D[i], i);
+        		printf("Error:%d, %d, %d\n", C[i], D[i], i);
 			break;
       		}
 		flag ++;
