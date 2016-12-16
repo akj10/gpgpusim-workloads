@@ -10,7 +10,7 @@
 ##############################################################################
 
 CC = nvcc
-CCFLAGS = -w -O3 -arch=sm_52 --ptxas-options=-v
+CCFLAGS = -w -O3 -arch=sm_20 --ptxas-options=-v
 CCDEBUGFLAGS = -g
 INC = -I./include -I/usr/local/cuda-7.5/include -I/usr/local/cuda-7.5/samples/common/inc
 default:
