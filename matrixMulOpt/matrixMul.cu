@@ -23,7 +23,7 @@ void matrixMulCPU(float *A, float *B, float *C, int size){
 		for(j = 0; j < size; j++){
 			sum = 0;
 			for(k = 0; k < size; k++){
-				sum += A[i * size + k] * B[k * size + j];
+				sum += A[i * size + k] * B[j * size + k];
 			}
 			C[i * size + j] = sum;
 		}
@@ -50,14 +50,19 @@ __global__ void matrixMulGPU(float *A, float *B, float *C, int width){
     	int aStep  = BLOCK_SIZE;
 
     	// Index of the first sub-matrix of B processed by the block
-    	int bBegin = BLOCK_SIZE * bx;
+    	int bBegin = width * BLOCK_SIZE * bx;
 
     	// Step size used to iterate through the sub-matrices of B
-    	int bStep  = BLOCK_SIZE * width;
+    	int bStep  = BLOCK_SIZE;
 
     	// Csub is used to store the element of the block sub-matrix
     	// that is computed by the thread
     	float Csub = 0;
+        if (bx == 0 && tx==0 && by==0 && ty==0) {
+            printf("aBegin=%d, bBegin=%d\n", aBegin, bBegin);
+            printf("aStep=%d, bStep=%d\n", aStep, bStep);
+            printf("aEnd=%d\n", aEnd);
+        }
 
     	// Loop over all the sub-matrices of A and B
     	// required to compute the block sub-matrix
@@ -79,6 +84,9 @@ __global__ void matrixMulGPU(float *A, float *B, float *C, int width){
         	// one element of each matrix
         	As[ty][tx] = A[a + width * ty + tx];
         	Bs[ty][tx] = B[b + width * ty + tx];
+            if (bx == 0 && tx==0 && by==0 && ty==0) {
+                printf("Loading A=%f, B=%f\n", As[ty][tx], Bs[ty][tx]);
+            }
 
         	// Synchronize to make sure the matrices are loaded
         	__syncthreads();
@@ -90,7 +98,7 @@ __global__ void matrixMulGPU(float *A, float *B, float *C, int width){
 
         	for (int k = 0; k < BLOCK_SIZE; ++k)
         	{
-            		Csub += As[ty][k] * Bs[k][tx];
+            		Csub += As[ty][k] * Bs[tx][k];
         	}
 
         	// Synchronize to make sure that the preceding
