@@ -5,8 +5,10 @@ CCDEBUGFLAGS = -g
 #INC = -I./include -I/usr/local/cuda-7.5/include -I/usr/local/cuda-7.5/samples/common/inc
 default:
 	$(CC) $(CCFLAGS) matrixMul.cu -o matrixMul $(INC) $(CCOPTIONS)
+	$(CC) $(CCFLAGS) --ptx matrixMul.cu -o test.ptx $(INC) $(CCOPTIONS)
 packed:
 	$(CC) $(CCFLAGS) matrixMul_packed.cu -o matrixMul_packed $(INC) $(CCOPTIONS)
+	$(CC) $(CCFLAGS) --ptx matrixMul_packed.cu -o test.ptx $(INC) $(CCOPTIONS)
 ptx:
 	$(CC) $(CCFLAGS) --ptx matrixMul.cu -o test.ptx $(INC) $(CCOPTIONS)
 ptx_packed:
