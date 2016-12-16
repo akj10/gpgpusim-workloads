@@ -58,11 +58,6 @@ __global__ void matrixMulGPU(int *A, int *B, int *C, int width){
     	// Csub is used to store the element of the block sub-matrix
     	// that is computed by the thread
     	int Csub = 0;
-        if (bx == 0 && tx==0 && by==0 && ty==0) {
-            printf("aBegin=%d, bBegin=%d\n", aBegin, bBegin);
-            printf("aStep=%d, bStep=%d\n", aStep, bStep);
-            printf("aEnd=%d\n", aEnd);
-        }
 
     	// Loop over all the sub-matrices of A and B
     	// required to compute the block sub-matrix
@@ -84,9 +79,6 @@ __global__ void matrixMulGPU(int *A, int *B, int *C, int width){
         	// one element of each matrix
         	As[ty][tx] = A[a + width * ty + tx];
         	Bs[ty][tx] = B[b + width * ty + tx];
-            if (bx == 0 && tx==0 && by==0 && ty==0) {
-                printf("Loading A=%d, B=%d\n", As[ty][tx], Bs[ty][tx]);
-            }
 
         	// Synchronize to make sure the matrices are loaded
         	__syncthreads();
@@ -111,11 +103,6 @@ __global__ void matrixMulGPU(int *A, int *B, int *C, int width){
     	// each thread writes one element
     	int c = width * BLOCK_SIZE * by + BLOCK_SIZE * bx;
     	C[c + width * ty + tx] = Csub;
-
-        printf(" by = %u",by);
-        printf(" bx = %u",bx);
-        printf(" ty = %u",ty);
-        printf(" tx = %u\n",tx);
 
 }
 
