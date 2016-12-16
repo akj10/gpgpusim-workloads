@@ -138,8 +138,8 @@ int main(int argc, char *argv[]){
 	srand(time(NULL));
   	// Init matrix
     	for(i = 0; i < MSIZE; i++){
-      		A[i] = 1;//(rand() % 16) - 8;
-      		B[i] = 1;//(rand() % 16) - 8;
+      		A[i] = (rand() % 16) - 8;
+		B[i] = (rand() % 16) - 8;
       		C[i] = 0;
       		D[i] = 0;
     	}
