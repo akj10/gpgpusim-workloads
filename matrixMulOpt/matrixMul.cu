@@ -31,9 +31,9 @@ void matrixMulCPU(float *A, float *B, float *C, int size){
 	}
 }
 
-__global__ void matrixMulGPU(float *A, float *B, float *C, int wA, int wB){
-	// Block index
-	int bx = blockIdx.x;
+__global__ void matrixMulGPU(float *A, float *B, float *C, int width){
+        // Block index
+        int bx = blockIdx.x;
     	int by = blockIdx.y;
 
     	// Thread index
@@ -41,10 +41,10 @@ __global__ void matrixMulGPU(float *A, float *B, float *C, int wA, int wB){
     	int ty = threadIdx.y;
 
     	// Index of the first sub-matrix of A processed by the block
-    	int aBegin = wA * BLOCK_SIZE * by;
+    	int aBegin = width * BLOCK_SIZE * by;
 
     	// Index of the last sub-matrix of A processed by the block
-    	int aEnd   = aBegin + wA - 1;
+    	int aEnd   = aBegin + width - 1;
 
     	// Step size used to iterate through the sub-matrices of A
     	int aStep  = BLOCK_SIZE;
@@ -53,7 +53,7 @@ __global__ void matrixMulGPU(float *A, float *B, float *C, int wA, int wB){
     	int bBegin = BLOCK_SIZE * bx;
 
     	// Step size used to iterate through the sub-matrices of B
-    	int bStep  = BLOCK_SIZE * wB;
+    	int bStep  = BLOCK_SIZE * width;
 
     	// Csub is used to store the element of the block sub-matrix
     	// that is computed by the thread
@@ -77,8 +77,8 @@ __global__ void matrixMulGPU(float *A, float *B, float *C, int wA, int wB){
         	// Load the matrices from device memory
         	// to shared memory; each thread loads
         	// one element of each matrix
-        	As[ty][tx] = A[a + wA * ty + tx];
-        	Bs[ty][tx] = B[b + wB * ty + tx];
+        	As[ty][tx] = A[a + width * ty + tx];
+        	Bs[ty][tx] = B[b + width * ty + tx];
 
         	// Synchronize to make sure the matrices are loaded
         	__syncthreads();
@@ -101,8 +101,8 @@ __global__ void matrixMulGPU(float *A, float *B, float *C, int wA, int wB){
 
     	// Write the block sub-matrix to device memory;
     	// each thread writes one element
-    	int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-    	C[c + wB * ty + tx] = Csub;
+    	int c = width * BLOCK_SIZE * by + BLOCK_SIZE * bx;
+    	C[c + width * ty + tx] = Csub;
 
 	
 
@@ -114,16 +114,15 @@ int main(int argc, char *argv[]){
   	float *A_dev, *B_dev, *C_dev;
   	double start_timer, end_timer;
 
-	int mCols, mRows, MSIZE;
+	int width, MSIZE;
 
 	if(argc < 2){
 		printf("Error input options\n");
 		exit(1);
 	}
 
-	mCols = atoi(argv[1]);
-	mRows = atoi(argv[1]);
-	MSIZE = mCols * mRows;
+	width = atoi(argv[1]);
+	MSIZE = width * width;
 
     	A = (float*)malloc(sizeof(float)*MSIZE);
      	cudaMalloc(&A_dev, MSIZE*sizeof(float));
@@ -149,11 +148,11 @@ int main(int argc, char *argv[]){
 
    	/*thread blcok conf.*/ 
 	dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
-  	dim3 grid(mCols/dimBlock.x, mRows/dimBlock.y);
+  	dim3 grid(width/dimBlock.x, width/dimBlock.y);
 
   	start_timer = my_timer();
 
-    	matrixMulGPU<<<grid, dimBlock>>>(A_dev, B_dev, C_dev, mCols, mRows);
+    	matrixMulGPU<<<grid, dimBlock>>>(A_dev, B_dev, C_dev, width);
 
   	cudaDeviceSynchronize();
 
@@ -165,7 +164,7 @@ int main(int argc, char *argv[]){
  
 	start_timer = my_timer();
 
-    	matrixMulCPU(A, B, D, mCols);
+    	matrixMulCPU(A, B, D, width);
  
   	end_timer = my_timer();
   	printf("The CPU Elapsed Time:%lf Sec.\n", end_timer - start_timer);
