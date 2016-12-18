@@ -39,7 +39,7 @@ __global__ void matrixMulGPU(unsigned int *A, unsigned int *B, int *C, int width
     	// Thread index
     	int tx = threadIdx.x;
     	int ty = threadIdx.y;
-
+        int i = 0;
     	// Index of the first sub-matrix of A processed by the block
     	int aBegin = width/4 * BLOCK_SIZE * by;
 
@@ -47,13 +47,13 @@ __global__ void matrixMulGPU(unsigned int *A, unsigned int *B, int *C, int width
     	int aEnd   = aBegin + width/4 - 1;
 
     	// Step size used to iterate through the sub-matrices of A
-    	int aStep  = BLOCK_SIZE/4;
+    	int aStep  = BLOCK_SIZE;
 
     	// Index of the first sub-matrix of B processed by the block
     	int bBegin = width/4 * BLOCK_SIZE * bx;
 
     	// Step size used to iterate through the sub-matrices of B
-    	int bStep  = BLOCK_SIZE/4;
+    	int bStep  = BLOCK_SIZE;
 
     	// Csub is used to store the element of the block sub-matrix
     	// that is computed by the thread
@@ -63,24 +63,25 @@ __global__ void matrixMulGPU(unsigned int *A, unsigned int *B, int *C, int width
     	// required to compute the block sub-matrix
 	for (int a = aBegin, b = bBegin;
          a <= aEnd;
-         a += aStep, b += bStep)
+             a += aStep, b += bStep,i++)
     	{
 
         	// Declaration of the shared memory array As used to
         	// store the sub-matrix of A
-        	__shared__ unsigned int As[BLOCK_SIZE][BLOCK_SIZE/4];
+        	__shared__ unsigned int As[BLOCK_SIZE][BLOCK_SIZE];
 
         	// Declaration of the shared memory array Bs used to
         	// store the sub-matrix of B
-        	__shared__ unsigned int Bs[BLOCK_SIZE][BLOCK_SIZE/4];
+        	__shared__ unsigned int Bs[BLOCK_SIZE][BLOCK_SIZE];
 
         	// Load the matrices from device memory
         	// to shared memory; each thread loads
         	// one element of each matrix
-                if (tx < BLOCK_SIZE/4) { 
+                //if (tx < BLOCK_SIZE/4) { 
+                //if(i % 4 == 0) {
                   As[ty][tx] = A[a + width/4 * ty + tx];
                   Bs[ty][tx] = B[b + width/4 * ty + tx];
-                }
+                  //}
 
         	// Synchronize to make sure the matrices are loaded
         	__syncthreads();
@@ -90,7 +91,7 @@ __global__ void matrixMulGPU(unsigned int *A, unsigned int *B, int *C, int width
         	// of the block sub-matrix
 #pragma unroll
 
-        	for (int k = 0; k < BLOCK_SIZE/4; ++k)
+        	for (int k = 0; k < BLOCK_SIZE; ++k)
         	{
             		Csub += As[ty][k] * Bs[tx][k];
         	}

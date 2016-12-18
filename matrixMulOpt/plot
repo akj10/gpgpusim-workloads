@@ -1,0 +1,158 @@
+gpu_sim_cycle
+log_c128	23391
+log_c16	3595
+log_c256	143271
+log_c32	4276
+log_c512	1068031
+log_c64	6518
+log_n128	54010
+log_n16	4025
+log_n256	359917
+log_n32	5432
+log_n512	2721767
+log_n64	12526
+log_p128	12177
+log_p16	3217
+log_p256	66199
+log_p32	3593
+log_p512	524103
+log_p64	4290
+
+gpu_sim_insn
+log_c128	9109504
+log_c16	27648
+log_c256	69992448
+log_c32	176128
+log_c512	548405248
+log_c64	1228800
+log_n128	9109504
+log_n16	27648
+log_n256	69992448
+log_n32	176128
+log_n512	548405248
+log_n64	1228800
+log_p128	3719168
+log_p16	17344
+log_p256	26804224
+log_p32	92672
+log_p512	202637312
+log_p64	557056
+
+gpgpu_n_stall_shd_mem
+log_c128	96049
+log_c16	128
+log_c256	636729
+log_c32	1184
+log_c512	4940101
+log_c64	9590
+log_n128	497721
+log_n16	896
+log_n256	3821734
+log_n32	7329
+log_n512	30402209
+log_n64	58768
+log_p128	48117
+log_p16	32
+log_p256	273682
+log_p32	298
+log_p512	2676080
+log_p64	2235
+
+gpgpu_n_mem_read_global
+log_c128	3408
+log_c16	4
+log_c256	28762
+log_c32	32
+log_c512	342229
+log_c64	256
+log_n128	10532
+log_n16	16
+log_n256	86307
+log_n32	128
+log_n512	705537
+log_n64	1024
+log_p128	5609
+log_p16	4
+log_p256	44738
+log_p32	32
+log_p512	492693
+log_p64	256
+
+gpgpu_n_mem_write_global
+log_c128	1024
+log_c16	8
+log_c256	4096
+log_c32	64
+log_c512	16384
+log_c64	256
+log_n128	1024
+log_n16	8
+log_n256	4096
+log_n32	64
+log_n512	16384
+log_n64	256
+log_p128	1024
+log_p16	8
+log_p256	4096
+log_p32	64
+log_p512	16384
+log_p64	256
+
+log_c128:Stall:	171337	W0_Idle:83734	W0_Scoreboard:67225	
+log_c16:Stall:	254	W0_Idle:4086	W0_Scoreboard:1998	
+log_c256:Stall:	1129987	W0_Idle:401084	W0_Scoreboard:398457	
+log_c32:Stall:	2051	W0_Idle:17793	W0_Scoreboard:8778	
+log_c512:Stall:	8801212	W0_Idle:2698141	W0_Scoreboard:3102137	
+log_c64:Stall:	16459	W0_Idle:71389	W0_Scoreboard:39040	
+log_n128:Stall:	733964	W0_Idle:222135	W0_Scoreboard:158259	
+log_n16:Stall:	1206	W0_Idle:3774	W0_Scoreboard:2218	
+log_n256:Stall:	5645181	W0_Idle:1457779	W0_Scoreboard:998338	
+log_n32:Stall:	9820	W0_Idle:17355	W0_Scoreboard:10631	
+log_n512:Stall:	44999930	W0_Idle:11042412	W0_Scoreboard:7631342	
+log_n64:Stall:	80530	W0_Idle:86579	W0_Scoreboard:68427	
+log_p128:Stall:	79396	W0_Idle:32239	W0_Scoreboard:51721	
+log_p16:Stall:	76	W0_Idle:3787	W0_Scoreboard:1943	
+log_p256:Stall:	395587	W0_Idle:56746	W0_Scoreboard:229653	
+log_p32:Stall:	582	W0_Idle:15758	W0_Scoreboard:8458	
+log_p512:Stall:	3981773	W0_Idle:140979	W0_Scoreboard:1857946	
+log_p64:Stall:	4678	W0_Idle:62442	W0_Scoreboard:35330	
+
+L1D_total_cache_accesses
+log_c128	17408
+log_c16	24
+log_c256	135168
+log_c32	320
+log_c512	1064960
+log_c64	2304
+log_n128	17408
+log_n16	24
+log_n256	135168
+log_n32	320
+log_n512	1064960
+log_n64	2304
+log_p128	17408
+log_p16	24
+log_p256	135168
+log_p32	192
+log_p512	1064960
+log_p64	1280
+
+L1D_total_cache_misses
+log_c128	4432
+log_c16	12
+log_c256	32858
+log_c32	96
+log_c512	358613
+log_c64	512
+log_n128	11556
+log_n16	24
+log_n256	90403
+log_n32	192
+log_n512	721921
+log_n64	1280
+log_p128	6633
+log_p16	12
+log_p256	48834
+log_p32	96
+log_p512	509077
+log_p64	512
